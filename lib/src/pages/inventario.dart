@@ -33,7 +33,7 @@ class _InventarioState extends State<Inventario> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inventario')
+        title: Text('Inventario Nuevo')
       ),
       body: ListView(
         padding: EdgeInsets.all(8),
@@ -42,17 +42,6 @@ class _InventarioState extends State<Inventario> {
             key: _formKey,
             child: _crearInput(),
           ),
-          
-          //FutureBuilder<List<Producto>>(
-            //future: future,
-            //builder: (context, snapshot) {
-              //if (snapshot.hasData) {
-                //return Column(children: snapshot.data.map((prodListado) => buildItem(prodListado)).toList());
-              //} else {
-                //return SizedBox();
-              //}
-            //},
-          //),
 
           SingleChildScrollView(
                 scrollDirection: Axis.vertical,
