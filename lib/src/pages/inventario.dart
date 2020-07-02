@@ -33,11 +33,11 @@ class _InventarioState extends State<Inventario> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inventario Nuevo')
+        title: Text('Inventario')
       ),
       body: ListView(
         padding: EdgeInsets.all(8),
-        children: <Widget>[
+        children: <Widget>[  
           Form(
             key: _formKey,
             child: _crearInput(),
