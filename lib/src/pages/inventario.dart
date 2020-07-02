@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:inventario/src/database/database.dart';
 import 'package:inventario/src/models/producto.dart';
@@ -33,15 +35,26 @@ class _InventarioState extends State<Inventario> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inventario')
+        title: Text('Inventario nuevo')
       ),
       body: ListView(
         padding: EdgeInsets.all(8),
-        children: <Widget>[  
+        children: <Widget>[
           Form(
             key: _formKey,
             child: _crearInput(),
           ),
+          
+          //FutureBuilder<List<Producto>>(
+            //future: future,
+            //builder: (context, snapshot) {
+              //if (snapshot.hasData) {
+                //return Column(children: snapshot.data.map((prodListado) => buildItem(prodListado)).toList());
+              //} else {
+                //return SizedBox();
+              //}
+            //},
+          //),
 
           SingleChildScrollView(
                 scrollDirection: Axis.vertical,
