@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:inventario/src/database/database.dart';
 import 'package:inventario/src/models/producto.dart';
@@ -7,108 +5,85 @@ import 'package:inventario/src/pages/agregarProducto.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Inventario extends StatefulWidget {
-
   @override
   _InventarioState createState() => _InventarioState();
 }
 
 class _InventarioState extends State<Inventario> {
   final _formKey = GlobalKey<FormState>();
-  Future<List<Producto>> future;
-
-  final _biggerFont = const TextStyle(fontSize: 18.0); 
   List<Producto> proList;
 	int count = 0;
 
   @override
   initState() {
     super.initState();
-    future = DBProvider.db.getTodosProducto();
+    this.proList = [];
+    this.count = 0;
+    updateListView();
   }
 
   @override
   Widget build(BuildContext context) {
-    if(proList == null){
-      proList = List<Producto>();
-      updateListView();
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inventario nuevo')
+        title: Text('Inventario')
       ),
       body: ListView(
-        padding: EdgeInsets.all(8),
+        padding: EdgeInsets.all(5),
         children: <Widget>[
+          SizedBox(height:20.0),
           Form(
             key: _formKey,
             child: _crearInput(),
           ),
-          
-          //FutureBuilder<List<Producto>>(
-            //future: future,
-            //builder: (context, snapshot) {
-              //if (snapshot.hasData) {
-                //return Column(children: snapshot.data.map((prodListado) => buildItem(prodListado)).toList());
-              //} else {
-                //return SizedBox();
-              //}
-            //},
-          //),
-
+          SizedBox(height:15.0),
           SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child:  DataTable(
-            columns: <DataColumn>[
-              DataColumn(
-                label: Text("Cantidad"),
-              ),
-              DataColumn(
-                label: Text("Nombre"),
-              ),
-              DataColumn(
-                label: Text("Precio Compra"),
-              ),
-              DataColumn(
-                label: Text("Precio Venta"),
-              ),
-              ],
-              rows: proList
-                  .map(
-                    (name) => DataRow(
-                          cells: [
-                            DataCell(
-                              Text(name.cant.toString()),
-                              showEditIcon: false,
-                              placeholder: false,
+                    columns: <DataColumn>[
+                      DataColumn(
+                        label: Text("Cantidad",style: TextStyle(color: Colors.black, fontSize: 20.0),),
+                      ),
+                      DataColumn(
+                        label: Text("Nombre",style: TextStyle(color: Colors.black, fontSize: 20.0),),
+                      ),
+                      DataColumn(
+                        label: Text("Borrar",style: TextStyle(color: Colors.black, fontSize: 20.0),),
+                      ),
+                      ],
+                      rows: proList
+                          .map(
+                            (name) => DataRow(
+                                  cells: [
+                                    DataCell(
+                                      Text(name.cant.toString(), style: TextStyle(color: Colors.black, fontSize: 15.0),),
+                                      showEditIcon: false,
+                                      placeholder: false,
+                                      onTap: () => showProducDialog(context, name),
+                                    ),
+                                    DataCell(
+                                      Text(name.nombreProducto, style: TextStyle(color: Colors.black, fontSize: 15.0),),
+                                      showEditIcon: false,
+                                      placeholder: false,
+                                      onTap: () => showProducDialog(context, name),
+                                    ),
+                                    DataCell( new IconButton(
+                                      icon: const Icon(Icons.delete_forever,
+                                        color: const Color(0xFF167F67),), 
+                                      onPressed: () => showProducBorrarDialog(context, name),
+                                      alignment: Alignment.centerLeft
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ).toList()
                             ),
-                            DataCell(
-                              Text(name.nombreProducto),
-                              showEditIcon: false,
-                              placeholder: false,
-                            ),
-                            DataCell(
-                              Text(name.precioC.toString()),
-                              showEditIcon: false,
-                              placeholder: false,
-                            ),
-                            DataCell(
-                              Text(name.precioV.toString()),
-                              showEditIcon: false,
-                              placeholder: false,
-                            ),
-                          ],
-                        ),
-                  )
-                  .toList()),),)
-
-
-
+                          ),
+                        )
         ],
       ),
-   
       floatingActionButton: FloatingActionButton(
         onPressed: () {nuevoProducto();},
         tooltip: 'Agregar Nuevo Producto',
@@ -117,55 +92,97 @@ class _InventarioState extends State<Inventario> {
     );
   }
 
-  Card buildItem(Producto prodListado) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'nombre: ${prodListado.nombreProducto}',
-              style: TextStyle(fontSize: 24),
-            ),
-            SizedBox(height: 12),
-          ],
-        ),
+  showProducDialog(BuildContext context, Producto produ){
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(produ.nombreProducto),
+        content: Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('Precio Compra:    '+ produ.precioC.toString()),
+              Text('Precio Venta:        '+ produ.precioV.toString())
+            ]
+          )
+          ),
+        actions: <Widget>[
+          FlatButton(
+            onPressed: () {actualizarProducto(produ);},
+            child: Text('Actualizar')
+          ),
+          FlatButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancelar"),
+          ),
+        ],
       ),
     );
   }
 
-
-
-
-
-
-
-
-
-  ListView getProListView(){
-    return ListView.builder(
-      itemCount: count,
-      itemBuilder: (BuildContext context, int position){
-        return Card(
-          color: Colors.white,
-          child: ListTile(
-            title: Text('Nombre: ' + this.proList[position].nombreProducto),
-            subtitle: Text('Precio Compra:' + this.proList[position].precioC.toString()),
+  showProducBorrarDialog(BuildContext context, Producto produ){
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Desea Borrar'),
+        content: Text(produ.nombreProducto),
+        actions: <Widget>[
+          FlatButton(
+            onPressed: () {borrarProducto(produ.id); Navigator.pop(context);},
+            child: Text('Borrar')
           ),
-        );
-      }
-      );
+          FlatButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancelar"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void borrarProducto(int id) async {
+    int res = await DBProvider.db.deleteProducto(id);
+    if(res == 1){
+      updateListView();
+    }
+  }
+
+  void actualizarProducto(Producto p) async {
+    bool result = await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+		  return AgregarProducto(producto: p,);
+	  }));
+    if (result == true) {
+	  	updateListView();
+	  }
   }
 
   void nuevoProducto() async {
     bool result = await Navigator.push(context, MaterialPageRoute(builder: (context) {
 		  return AgregarProducto();
 	  }));
-
     if (result == true) {
 	  	updateListView();
 	  }
+  }
+
+  void listarProduNom(String nombre){
+    if(nombre.isEmpty){
+      updateListView();
+    }
+    else{
+      final Future<Database> dbfuture = DBProvider.db.initDB();
+      dbfuture.then((database) {
+      Future<List<Producto>> pro = DBProvider.db.getProductoNombre(nombre);
+      pro.then((proList){
+        setState(() {
+          this.proList = proList;
+          this.count = proList.length;
+        });
+      });
+    });
+  }
+
   }
 
   void updateListView(){
@@ -180,17 +197,9 @@ class _InventarioState extends State<Inventario> {
       });
     });
   }
-  
-
-  Widget _buildrow(Producto produc){
-    return new ListTile(
-      title: new Text(produc.nombreProducto),
-    );
-  }
 
   Widget _crearInput() {
     return TextField(
-      // autofocus: true,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         border: OutlineInputBorder(
@@ -200,8 +209,10 @@ class _InventarioState extends State<Inventario> {
         labelText: 'Nombre',
         suffixIcon: Icon( Icons.search)
       ),
-      onChanged: null
-      );
+      onChanged: (text) {
+        listarProduNom(text);
+      },
+    );
   }
 }
 

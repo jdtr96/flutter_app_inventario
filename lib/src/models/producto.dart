@@ -21,6 +21,10 @@ class Producto {
         precioV: json["precioV"].toDouble(),
     );
 
+    factory Producto.fromJsonID(Map<String, dynamic> json) => Producto(
+        id: json["MAX(id)"],
+    );
+
     Map<String, dynamic> toJson() => {
         "id": id,
         "cant": cant,

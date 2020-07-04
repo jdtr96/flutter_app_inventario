@@ -37,6 +37,12 @@ class DBProvider{
     );
   }
 
+  obtenerID() async {
+    final db = await database;
+    final res = await db.rawQuery("SELECT MAX(id) FROM Producto");
+    return res.isNotEmpty ? Producto.fromJsonID(res.first) : [];
+  }
+
   nuevoProducto( Producto nuevoProducto ) async {
     final db = await database;
     final res = await db.insert('Producto', nuevoProducto.toJson() ); 
@@ -66,7 +72,7 @@ class DBProvider{
   Future<int> deleteProducto(int id) async {
     final db = await database;
     final res = await db.delete('Producto', where: 'id = ?', whereArgs: [id]);
-    return res;
+    return int.tryParse(res.toString());
   }
 
   nuevoCompraVenta(CompraVenta compraventa) async {

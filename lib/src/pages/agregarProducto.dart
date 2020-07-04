@@ -12,21 +12,28 @@ class AgregarProducto extends StatefulWidget {
 }
 
 class _AgregarProductoState extends State<AgregarProducto> {
-  int _cantidad;
+  int _id;
+  String _cantidad;
   String _nombreProducto;
-  double _precioC;
-  double _precioV;
+  String _precioC;
+  String _precioV;
 
   final GlobalKey<FormState>_formKey = GlobalKey<FormState>();
   
   Widget _buildNombreProducto(){
     return TextFormField(
       initialValue: _nombreProducto,
-      decoration: InputDecoration(labelText: 'Nombre de Producto'),
-      style: TextStyle(fontSize: 28),
+      decoration: InputDecoration(
+        labelText: 'Nombre de Producto',
+        suffixIcon: Icon(Icons.assignment, size: 40.0,),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20.0)
+        ),
+      ),
+      style: TextStyle(fontSize: 20),
       validator: (String value) {
         if(value.isEmpty){
-          return 'Ingresar nombre de producto';
+          return 'Ingresar nombre del producto';
         }
         return null;
       },
@@ -36,21 +43,49 @@ class _AgregarProductoState extends State<AgregarProducto> {
     );
   }
 
-  Widget _buildPrecioC(){
+  Widget _buildCant(){
     return TextFormField(
-      initialValue: _precioC.toString(),
-      decoration: InputDecoration(labelText: 'precio de compra'),
+      initialValue: _cantidad.toString(),
+      decoration: InputDecoration(
+        labelText: 'Cantidad de producto',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20.0)
+        )
+      ),
       keyboardType: TextInputType.number,
-      style: TextStyle(fontSize: 28),
-      validator: (String value){
-        double precioC = double.tryParse(value);
-        if(precioC == null || precioC <= 0){
-          return 'Ingrese un precio de compra';
+      style: TextStyle(fontSize: 20),
+      validator: (String value) {
+        if(value.isEmpty){
+          return 'Ingresar cantidad de producto';
         }
         return null;
       },
       onSaved: (String value){
-        _precioC = double.tryParse(value);
+        _cantidad = value;
+      },
+    );
+  }
+
+  Widget _buildPrecioC(){
+    return TextFormField(
+      initialValue: _precioC.toString(),
+      decoration: InputDecoration(
+        labelText: 'Precio de compra',
+        suffixIcon: Icon(Icons.monetization_on, size: 40.0,),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20.0)
+        ),
+      ),
+      keyboardType: TextInputType.number,
+      style: TextStyle(fontSize: 20.0),
+      validator: (String value) {
+        if(value.isEmpty){
+          return 'Ingresar precio de compra';
+        }
+        return null;
+      },
+      onSaved: (String value){
+        _precioC = value;
       },
     );
   }
@@ -58,39 +93,35 @@ class _AgregarProductoState extends State<AgregarProducto> {
   Widget _buildPrecioV(){
     return TextFormField(
       initialValue: _precioV.toString(),
-      decoration: InputDecoration(labelText: 'precio de Venta'),
+      decoration: InputDecoration(
+        labelText: 'Precio de Venta',
+        suffixIcon: Icon(Icons.monetization_on, size: 40.0,),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20.0)
+        ),
+      ),
       keyboardType: TextInputType.number,
-      style: TextStyle(fontSize: 28),
-      validator: (String value){
-        double precioV = double.tryParse(value);
-        if(precioV == null || precioV <= 0){
-          return 'Ingrese un precio de Venta';
+      style: TextStyle(fontSize: 20.0),
+      validator: (String value) {
+        if(value.isEmpty){
+          return 'Ingresar precio de venta';
         }
         return null;
       },
       onSaved: (String value){
-        _precioV = double.tryParse(value);
+        _precioV = value;
       },
     );
   }
 
-  Widget _buildCant(){
-    return TextFormField(
-      initialValue: _cantidad.toString(),
-      decoration: InputDecoration(labelText: 'Cantidad de producto'),
-      keyboardType: TextInputType.number,
-      style: TextStyle(fontSize: 28),
-      validator: (String value){
-        double canti = double.tryParse(value);
-        if(canti == null || canti <= 0){
-          return 'Ingrese una cantidad';
-        }
-        return null;
-      },
-      onSaved: (String value){
-        _cantidad = int.tryParse(value);
-      },
-    );
+  obtenerid() async{
+    Producto p = await DBProvider.db.obtenerID();
+    if(p.id == null){
+      _id = p.id;
+    }
+    else{
+      _id = p.id + 1;
+    }
   }
 
   void crearProducto(Producto prod) async {
@@ -100,14 +131,29 @@ class _AgregarProductoState extends State<AgregarProducto> {
     }
   }
 
+  void updateProducto(Producto prod) async {
+    if (_formKey.currentState.validate()){
+      _formKey.currentState.save();
+      await DBProvider.db.updateProducto(prod);
+    }
+  }
+
   @override
   void initState() { 
     super.initState();
     if (widget.producto != null){
-      _cantidad = widget.producto.cant;
+      _id = widget.producto.id;
+      _cantidad = widget.producto.cant.toString();
       _nombreProducto = widget.producto.nombreProducto;
-      _precioC = widget.producto.precioC;
-      _precioV = widget.producto.precioV;
+      _precioC = widget.producto.precioC.toString();
+      _precioV = widget.producto.precioV.toString();
+    }
+    else{
+      _cantidad = "";
+      _nombreProducto = "";
+      _precioC = "";
+      _precioV = "";
+      obtenerid();
     }
   }
 
@@ -117,56 +163,91 @@ class _AgregarProductoState extends State<AgregarProducto> {
       appBar: AppBar(title: Text('Producto')),
       body: Container(
         margin: EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              _buildNombreProducto(),
-              _buildCant(),
-              _buildPrecioC(),
-              _buildPrecioV(),
-              widget.producto == null
-                  ? RaisedButton(
-                    child: Text(
-                      'Agregar',
-                      style: TextStyle(color: Colors.blue),
-                      ),
-                    onPressed: (){
-                      if(!_formKey.currentState.validate()){
-                        return;
-                      }
-                      _formKey.currentState.save();
-                      Producto pro = Producto(
-                        cant: _cantidad,
-                        nombreProducto: _nombreProducto,
-                        precioC: _precioC,
-                        precioV: _precioV,
-                      );
-                      crearProducto(pro);
-                      Navigator.pop(context, true);
-                      },
-                    )
-                  :Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                _buildNombreProducto(),
+                SizedBox(height:20.0),
+                _buildCant(),
+                SizedBox(height:20.0),
+                _buildPrecioC(),
+                SizedBox(height:20.0),
+                _buildPrecioV(),
+                SizedBox(height:35.0),
+                widget.producto == null
+                    ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
                         RaisedButton(
                           child: Text(
-                            "Update",
-                            style: TextStyle(color: Colors.blue, fontSize: 16),
+                            'AGREGAR',
+                            style: TextStyle(color: Colors.white, fontSize: 25.0),
+                            ),
+                          color: Colors.blueAccent,
+                          padding: EdgeInsets.all(15.0),
+                          onPressed: (){
+                            if(_formKey.currentState.validate()){
+                              _formKey.currentState.save();
+                              Producto pro = Producto(
+                                id: _id,
+                                cant: int.parse(_cantidad),
+                                nombreProducto: _nombreProducto,
+                                precioC: double.parse(_precioC),
+                                precioV: double.parse(_precioV),
+                              );
+                              crearProducto(pro);
+                              Navigator.pop(context, true);
+                          }
+                        },
+                      ),
+                      RaisedButton(
+                            child: Text(
+                              "CANCELAR",
+                              style: TextStyle(color: Colors.white, fontSize: 25.0),
+                            ),
+                            color: Colors.red,
+                            padding: EdgeInsets.all(15.0),
+                            onPressed: () => Navigator.pop(context),
                           ),
-                          onPressed: null,
-                        ),
-                        RaisedButton(
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.red, fontSize: 16),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                        ),
                       ],
-                  )
-            ]
+                    )
+                    :Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          RaisedButton(
+                            child: Text(
+                              "ACTUALIZAR",
+                              style: TextStyle(color: Colors.blue, fontSize: 16),
+                            ),
+                            onPressed: (){                            
+                              if(_formKey.currentState.validate()){
+                                _formKey.currentState.save();
+                                Producto pro = Producto(
+                                  id: _id,
+                                  cant: int.parse(_cantidad),
+                                  nombreProducto: _nombreProducto,
+                                  precioC: double.parse(_precioC),
+                                  precioV: double.parse(_precioV),
+                                );
+                                updateProducto(pro);
+                                Navigator.pop(context, true);
+                              }
+                            }
+                          ),
+                          RaisedButton(
+                            child: Text(
+                              "CANCELAR",
+                              style: TextStyle(color: Colors.red, fontSize: 16),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                    )
+              ]
+            ),
           ),
         )
       ),
